@@ -33,7 +33,7 @@ class Tools:
         for _ in range(15):
             try:
                 print('Checking if Elasticsearch container has started to listen to 9200')
-                elasticsearch_socket.connect(('elasticsearch', 9200))
+                elasticsearch_socket.connect(('localhost', 9200))
                 print('Great Elasticsearch is listening on 9200, 9300 :)')
                 connection_ok = True
                 break
@@ -46,7 +46,7 @@ class Tools:
         for _ in range(15):
             try:
                 print('Checking if Logstash container has started to listen to 5140')
-                logstash_socket.connect(('logstash', 5140))
+                logstash_socket.connect(('localhost', 5140))
                 print('Great Logstash is listening on 5140 :)')
                 connection_ok = True
                 break
@@ -59,7 +59,7 @@ class Tools:
         for _ in range(15):
             try:
                 print('Checking if Kibana container has started to listen to 5160')
-                kibana_socket.connect(('kibana', 5601))
+                kibana_socket.connect(('localhost', 5601))
                 print('Great Kibana is listening on 5601 :)')
                 connection_ok = True
                 break
