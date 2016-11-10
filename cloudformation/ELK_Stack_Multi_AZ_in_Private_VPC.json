@@ -8,6 +8,11 @@
       "Description": "Stack applied as a tag",
       "Type": "String"
     },
+    "Branch": {
+      "Description": "What git branch should I pull files from?",
+      "Type": "String",
+      "Default": "master"
+    },
     "KeyName": {
       "Description": "Name of an existing EC2 KeyPair for SSH access",
       "Type": "AWS::EC2::KeyPair::KeyName"
@@ -516,14 +521,14 @@
               "export GOPATH /go",
               "export $PATH=$GOPATH/bin:/usr/local/go/bin:$PATH",
               "mkdir -p  $GOPATH/src $GOPATH/bin && chmod -R 777 $GOPATH",
-              "cp https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/go-wrapper /usr/local/bin/",
+              { "Fn::Join": [ "", ["cp https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref": "Branch"}, "/extra/billing/go-wrapper /usr/local/bin/"]]},
 
               "# Install Logstash & Elasticsearch",
 
               "/usr/share/elasticsearch/bin/plugin install cloud-aws -b",
               "/usr/share/elasticsearch/bin/plugin install mobz/elasticsearch-head",
 
-              "wget -O /etc/elasticsearch/elasticsearch.yml https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/elasticsearch.yml",
+              { "Fn::Join": [ "", ["wget -O /etc/elasticsearch/elasticsearch.yml https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref": "Branch"}, "/config/elasticsearch.yml"]]},
               { "Fn::Join": [ "", [ "sed -i",
                 " -e 's,@@REGION,", { "Ref": "AWS::Region" }, ",g'",
                 " -e 's,@@STACK,", { "Ref": "Stack" }, ",g'",
@@ -563,7 +568,7 @@
               "# Configure Logstash",
               "/opt/logstash/bin/logstash-plugin install logstash-input-kinesis logstash-codec-cloudwatch_logs",
 
-              "wget -O /etc/logstash/conf.d/logstash-indexer.conf https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/logstash-indexer.conf",
+              { "Fn::Join": [ "", ["wget -O /etc/logstash/conf.d/logstash-indexer.conf https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/config/logstash-indexer.conf"]]},
               { "Fn::Join": [ "", [ "sed -i",
                 " -e s,@@KINESIS_STREAM_NAME,", { "Ref": "ElkKinesisStream" }, ",g",
                 " -e s,@@KINESIS_APPLICATION_NAME,", { "Ref": "ElkKinesisDynamoDBTable" }, ",g",
@@ -575,7 +580,7 @@
               "wget -O /tmp/kibana-latest.tar.gz https://download.elastic.co/kibana/kibana/kibana-4.5.0-linux-x64.tar.gz",
               "tar zxf /tmp/kibana-latest.tar.gz -C /opt",
               "mv /opt/kibana-* /opt/kibana",
-              "wget -O /opt/kibana/config/kibana.yml https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/kibana.yml",
+              { "Fn::Join": [ "", ["wget -O /opt/kibana/config/kibana.yml https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/config/kibana.yml"]]},
               {
                 "Fn::Join": [ "", [ "sed -i",
                   " -e s,@@HOSTNAME,", "localhost", ",g",
@@ -586,14 +591,14 @@
               "/opt/kibana/bin/kibana plugin --install sivasamyk/logtrail",
               "# Install Logcabin",
 
-              "wget -O /tmp/elk-stack.tar.gz https://github.com/toadkicker/elk-stack/archive/master.tar.gz",
+              { "Fn::Join": [ "", ["wget -O /tmp/elk-stack.tar.gz https://github.com/toadkicker/elk-stack/archive/", {"Ref":"Branch"}, ".tar.gz"]]},
               "tar zxf /tmp/elk-stack.tar.gz -C /tmp",
-              "mv /tmp/elk-stack-master/src /opt/logcabin",
+              { "Fn::Join": [ "", ["mv /tmp/elk-stack-", {"Ref":"Branch"}, "/src /opt/logcabin"]]},
               "adduser --disabled-password --gecos \"\" logcabin",
               "cd /opt/logcabin && npm install && cd ..",
               "chown -R logcabin /opt/logcabin",
 
-              "wget -O /opt/logcabin/config.js https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/config.js",
+              { "Fn::Join": [ "", ["wget -O /opt/logcabin/config.js https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/config/config.js"]]},
               { "Fn::Join": [ "", [ "sed -i",
                 " -e s,@@LOGCABIN_HOST,",
                 { "Fn::Join": ["",
@@ -615,8 +620,8 @@
               {"Fn::Join": [" ", ["export ENVIRONMENT", {"Ref": "Environment"}]]},
 
               "# Start services",
-              "wget -O /etc/systemd/system/logcabin.service https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/systemd-logcabin.service",
-              "wget -O /etc/systemd/system/kibana.service https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/systemd-kibana.service",
+              { "Fn::Join": ["", ["wget -O /etc/systemd/system/logcabin.service https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/config/systemd-logcabin.service"]]},
+              { "Fn::Join": ["", ["wget -O /etc/systemd/system/kibana.service https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/config/systemd-kibana.service"]]},
               "systemctl start logstash && systemctl enable logstash",
               "systemctl start elasticsearch && systemctl enable elasticsearch",
               "systemctl start kibana && systemctl enable kibana",
@@ -639,7 +644,7 @@
                   ]},
                   "curl 'http://localhost:9200/_snapshot/s3?pretty'",
 
-                  "wget -O /usr/local/bin/backup.sh https://raw.githubusercontent.com/toadkicker/elk-stack/master/scripts/backup.sh",
+                  { "Fn::Join": ["", ["wget -O /usr/local/bin/backup.sh https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/scripts/backup.sh"]]},
                   "chmod +x /usr/local/bin/backup.sh",
                   "echo '15 0 * * * root /usr/local/bin/backup.sh' >/etc/cron.d/backup"
                 ]]},
@@ -656,7 +661,7 @@
               },
 
               "# Setup Kibana Dashboard for billing",
-              "wget -O ./orchestrate.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/orchestrate.py",
+              { "Fn::Join": ["", ["wget -O ./orchestrate.py https://raw.githubusercontent.com/toadkicker/elk-stack/", {"Ref":"Branch"}, "/extra/billing/orchestrate.py"]]},
               "python -u ./orchestrate.py"
             ]]
           }
