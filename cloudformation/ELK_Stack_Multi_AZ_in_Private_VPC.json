@@ -502,9 +502,10 @@
               "sleep 1",
               "apt-get -y update",
               "apt-get -y upgrade",
-              "apt-get -y install ruby ruby-dev logstash openjdk-8-jre-headless openjdk-8-jdk elasticsearch nodejs build-essential ntp python-pip",
+              "apt-get -y install ruby ruby-dev logstash openjdk-8-jre-headless openjdk-8-jdk elasticsearch nodejs build-essential ntp python3-pip",
               "update-ca-certificates -f",
-              "pip install boto3 pyelasticsearch nose",
+              "pip3 install --upgrade pip3",
+              "pip3 install boto3 pyelasticsearch nose",
 
               "# Install Golang for parsing AWS Bills in S3",
               {"Fn::Join": [" ", ["export S3_BUCKET_NAME", {"Ref": "BillingBucketName"}]]},
@@ -647,7 +648,7 @@
               ]},
               "# Setup schedule to delete old indexes",
 
-              "pip install elasticsearch-curator==3.5.1",
+              "pip3 install elasticsearch-curator==3.5.1",
               { "Fn::Join": [ "", [
                 "echo '30 0 * * * root /usr/local/bin/curator --logfile /var/log/elasticsearch/curator.log delete indices --older-than ",
                 { "Ref" : "IndexKeepDays" },
@@ -656,8 +657,11 @@
               },
 
               "# Setup Kibana Dashboard for billing",
-              "wget -O ./orchestrate.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/orchestrate.py",
-              "python -u ./orchestrate.py"
+              "mkdir /usr/local/bin/tools",
+              "wget -O /usr/local/bin/tools/__init__.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/tools/__init__.py",
+              "wget -O /usr/local/bin/tools/tools.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/tools/tools.py",
+              "wget -O /usr/local/bin/orchestrate.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/orchestrate.py",
+              "python3 -u /usr/local/bin/orchestrate.py"
             ]]
           }
         }

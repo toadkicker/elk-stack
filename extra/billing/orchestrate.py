@@ -4,7 +4,7 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 '''
 added head source directory in path for import from any location and relative testing and pwd for open() relative files
 '''
-from tools.tools import Tools
+from tools import Tools
 import boto3
 
 

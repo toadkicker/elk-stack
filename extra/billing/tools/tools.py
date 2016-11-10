@@ -32,41 +32,40 @@ class Tools:
         connection_ok = False
         for _ in range(15):
             try:
-                print 'Checking if Elasticsearch container has started to listen to 9200'
+                print('Checking if Elasticsearch container has started to listen to 9200')
                 elasticsearch_socket.connect(('elasticsearch', 9200))
-                print 'Great Elasticsearch is listening on 9200, 9300 :)'
+                print('Great Elasticsearch is listening on 9200, 9300 :)')
                 connection_ok = True
                 break
             except Exception as e:
-                print(
-                    "Something's wrong with Elasticsearch. Exception is %s" % (e))
-                print 'I will retry after 4 seconds'
+                print("Something's wrong with Elasticsearch. Exception is %s" % (e))
+                print('I will retry after 4 seconds')
                 connection_ok = True
                 time.sleep(4)
 
         for _ in range(15):
             try:
-                print 'Checking if Logstash container has started to listen to 5140'
+                print('Checking if Logstash container has started to listen to 5140')
                 logstash_socket.connect(('logstash', 5140))
-                print 'Great Logstash is listening on 5140 :)'
+                print('Great Logstash is listening on 5140 :)')
                 connection_ok = True
                 break
             except Exception as e:
                 print("Something's wrong with Logstash. Exception is %s" % (e))
-                print 'I will retry after 4 seconds'
+                print('I will retry after 4 seconds')
                 connection_ok = True
                 time.sleep(4)
 
         for _ in range(15):
             try:
-                print 'Checking if Kibana container has started to listen to 5160'
+                print('Checking if Kibana container has started to listen to 5160')
                 kibana_socket.connect(('kibana', 5601))
-                print 'Great Kibana is listening on 5601 :)'
+                print('Great Kibana is listening on 5601 :)')
                 connection_ok = True
                 break
             except Exception as e:
                 print("Something's wrong with Kibana. Exception is %s" % (e))
-                print 'I will retry after 4 seconds'
+                print('I will retry after 4 seconds')
                 connection_ok = True
                 time.sleep(4)
 
@@ -83,12 +82,12 @@ class Tools:
                 ['curl -XPUT localhost:9200/_template/aws_billing -d "`curl https://raw.githubusercontent.com/toadkicker/elk-stack/master/extras/billing/aws-billing-es-template.json`"'],
                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
             if status.wait() != 0:
-                print 'Something went wrong while creating mapping index'
+                print('Something went wrong while creating mapping index')
                 sys.exit(1)
             else:
-                print 'ES mapping created :)'
+                print('ES mapping created :)')
         else:
-            print 'Template already exists'
+            print('Template already exists')
 
     def get_s3_bucket_dir_to_index(self):
         key_names = self.s3.list_objects(
@@ -178,9 +177,9 @@ class Tools:
         status = subprocess.Popen(
             ['curl -XDELETE localhost:9200/aws-billing-' + index_format], shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if status.wait() != 0:
-            print 'I think there are no aws-billing* indice or it is outdated, its OK main golang code will create a new one for you :)'
+            print('I think there are no aws-billing* indice or it is outdated, its OK main golang code will create a new one for you :)')
         else:
-            print 'aws-billing* indice deleted or Not found, its OK main golang code will create a new one for you :)'
+            print('aws-billing* indice deleted or Not found, its OK main golang code will create a new one for you :)')
 
         # Run the main golang code to parse the billing file and send it to
         # Elasticsearch over Logstash
@@ -189,10 +188,10 @@ class Tools:
         print(status.stdout.read())
         print(status.stderr.read())
         if status.wait() != 0:
-            print 'Something went wrong while getting the file reference or while talking with logstash'
+            print('Something went wrong while getting the file reference or while talking with logstash')
             sys.exit(1)
         else:
-            print 'AWS Billing report sucessfully parsed and indexed in Elasticsearch via Logstash :)'
+            print('AWS Billing report sucessfully parsed and indexed in Elasticsearch via Logstash :)')
 
     def index_kibana(self):
         # Index the search mapping for Discover to work 
@@ -200,10 +199,10 @@ class Tools:
                 ['(cd /aws-elk-billing/kibana; bash orchestrate_search_mapping.sh)'],
                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if status.wait() != 0:
-            print 'The Discover Search mapping failed to be indexed to .kibana index in Elasticsearch'
+            print('The Discover Search mapping failed to be indexed to .kibana index in Elasticsearch')
             sys.exit(1)
         else:
-            print 'The Discover Search mapping sucessfully indexed to .kibana index in Elasticsearch, Kept intact if user already used it :)'
+            print('The Discover Search mapping sucessfully indexed to .kibana index in Elasticsearch, Kept intact if user already used it :)')
 
 
         # Index Kibana dashboard
@@ -211,20 +210,20 @@ class Tools:
             ['(cd /aws-elk-billing/kibana; bash orchestrate_dashboard.sh)'],
             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if status.wait() != 0:
-            print 'AWS-Billing-DashBoard default dashboard failed to indexed to .kibana index in Elasticsearch'
+            print('AWS-Billing-DashBoard default dashboard failed to indexed to .kibana index in Elasticsearch')
             sys.exit(1)
         else:
-            print 'AWS-Billing-DashBoard default dashboard sucessfully indexed to .kibana index in Elasticsearch, Kept intact if user already used it :)'
+            print('AWS-Billing-DashBoard default dashboard sucessfully indexed to .kibana index in Elasticsearch, Kept intact if user already used it :)')
 
         # Index Kibana visualization
         status = subprocess.Popen(
             ['(cd /aws-elk-billing/kibana; bash orchestrate_visualisation.sh)'],
             shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         if status.wait() != 0:
-            print 'Kibana default visualizations failed to indexed to .kibana index in Elasticsearch'
+            print('Kibana default visualizations failed to indexed to .kibana index in Elasticsearch')
             sys.exit(1)
         else:
-            print 'Kibana default visualizations sucessfully indexed to .kibana index in Elasticsearch, Kept intact if user have already used it :)'
+            print('Kibana default visualizations sucessfully indexed to .kibana index in Elasticsearch, Kept intact if user have already used it :)')
 
     def delete_csv_json_files(self):
         # delete all getfile json, csv files and part downloading files after indexing over
