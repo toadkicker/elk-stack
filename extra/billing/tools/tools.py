@@ -45,9 +45,9 @@ class Tools:
 
         for _ in range(15):
             try:
-                print('Checking if Logstash container has started to listen to 5140')
-                logstash_socket.connect(('localhost', 5140))
-                print('Great Logstash is listening on 5140 :)')
+                print('Checking if Logstash container has started to listen to 6379')
+                logstash_socket.connect(('localhost', 6379))
+                print('Great Logstash is listening on 6379 :)')
                 connection_ok = True
                 break
             except Exception as e:
@@ -58,7 +58,7 @@ class Tools:
 
         for _ in range(15):
             try:
-                print('Checking if Kibana container has started to listen to 5160')
+                print('Checking if Kibana container has started to listen to 5601')
                 kibana_socket.connect(('localhost', 5601))
                 print('Great Kibana is listening on 5601 :)')
                 connection_ok = True
@@ -77,7 +77,7 @@ class Tools:
 
     def index_template(self):
         out = subprocess.check_output(['curl -XHEAD -i "localhost:9200/_template/aws_billing"'], shell=True, stderr=subprocess.PIPE)
-        if '200 OK' not in out:
+        if '200 OK' not in out.decode():
             status = subprocess.Popen(
                 ['curl -XPUT localhost:9200/_template/aws_billing -d "`curl https://raw.githubusercontent.com/toadkicker/elk-stack/master/extras/billing/aws-billing-es-template.json`"'],
                 shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
