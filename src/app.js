@@ -10,24 +10,23 @@ console.log('Logcabin starting...');
 
 app.use(sessions({cookieName: 'session', secret: config.cookie_secret}));
 
-function selectAuthStrategy() {
-    //Using switch case here so we can support adding more strategies easily
-    switch(config.oauth_strategy) {
-        case 'auth0':
-            auth = require('./lib/auth.auth0');
-            break;
-        default:
-            auth = require('./lib/auth.google');
-    }
-}
-g_auth.setup(express, app, config);
-
+selectAuthStrategy();
 proxyES();
 proxyKibana4();
 
 http.createServer(app).listen(config.listen_port);
 console.log('Logcabin listening on ' + config.listen_port);
-
+function selectAuthStrategy() {
+    //Using switch case here so we can support adding more strategies easily
+    switch(config.oauth_strategy) {
+        case 'Auth0':
+            auth = require('./lib/auth.auth0');
+            break;
+        default:
+            auth = require('./lib/auth.google');
+    }
+    auth.setup(express, app, config);
+}
 function proxyES() {
     app.use("/__es", function (request, response, next) {
 

@@ -6,6 +6,7 @@ var config = require('../config.js'),
     passport = require('passport');
 
 exports.setup = function (express, app, config) {
+    console.log('Auth0 OAuth2 authentication used');
 
     var callbackUrl = config.host + '/auth/auth0/callback';
 
@@ -26,7 +27,7 @@ exports.setup = function (express, app, config) {
     passport.use(strategy);
 
     app.use(function (req, res, next) {
-        var verifyApiKey = require('./auth.apikey');
+        var verifyApiKey = require('./auth.apikey').verifyApiKey;
         if (req.session.authenticated || nonAuthenticated(config, req.url) || verifyApiKey(config, req)) {
             return next()
         }

@@ -29,7 +29,7 @@ exports.setup = function (express, app, config) {
     }));
 
     app.use(function (req, res, next) {
-        var verifyApiKey = require('./auth.apikey');
+        var verifyApiKey = require('./auth.apikey').verifyApiKey;
         if (req.session.authenticated || nonAuthenticated(config, req.url) || verifyApiKey(config, req)) {
             return next()
         }
