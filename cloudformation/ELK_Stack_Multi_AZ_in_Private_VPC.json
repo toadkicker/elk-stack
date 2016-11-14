@@ -511,6 +511,7 @@
                 "Fn::Join": ["\n", [
                   "# Install Golang for parsing AWS Bills in S3",
                   "cat > /etc/environment << EOF",
+                  {"Fn::Join": ["=", ["ENVIRONMENT", {"Ref": "Environment"}]]},
                   {"Fn::Join": ["=", ["S3_BUCKET_NAME", {"Ref": "BillingBucketName"}]]},
                   {"Fn::Join": ["=", ["S3_REPORT_PATH", {"Ref": "BillingBucketPath"}]]},
                   {"Fn::Join": ["=", ["S3_REPORT_NAME", {"Ref": "BillingReportName"}]]},
@@ -618,8 +619,6 @@
                 " -e s,@@ALLOWED_DOMAIN,", { "Ref": "AllowedDomain" }, ",g",
                 " /opt/logcabin/config.js" ] ]
               },
-              "# Set environment variables",
-              {"Fn::Join": [" ", ["export ENVIRONMENT", {"Ref": "Environment"}]]},
 
               "# Start services",
               "wget -O /etc/systemd/system/logcabin.service https://raw.githubusercontent.com/toadkicker/elk-stack/master/config/systemd-logcabin.service",
