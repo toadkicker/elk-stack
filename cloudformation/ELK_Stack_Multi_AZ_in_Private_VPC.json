@@ -506,7 +506,7 @@
               "apt-get -y install ruby ruby-dev logstash openjdk-8-jre-headless openjdk-8-jdk elasticsearch nodejs build-essential ntp python3-pip",
               "update-ca-certificates -f",
               "pip3 install --upgrade pip3",
-              "pip3 install boto3 pyelasticsearch nose",
+              "pip3 install boto3 elasticsearch nose",
               {"Fn::If": ["HasBillingBucket", {
                 "Fn::Join": ["\n", [
                   "# Install Golang for parsing AWS Bills in S3",
