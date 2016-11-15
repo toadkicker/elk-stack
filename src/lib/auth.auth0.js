@@ -12,8 +12,8 @@ exports.setup = function (express, app, config) {
 
     var strategy = new Auth0Strategy({
             domain: config.allowed_domain,
-            clientID: config.client_id,
-            clientSecret: config.client_secret,
+            clientID: config.oauth_client_id,
+            clientSecret: config.oauth_client_secret,
             callbackURL: callbackUrl
         },
         function (accessToken, refreshToken, extraParams, profile, done) {
