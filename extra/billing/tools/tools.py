@@ -4,24 +4,24 @@ sys.path.append(os.path.join(os.path.dirname(__file__)))
 '''
 added head source directory in path for import from any location and relative testing and pwd for open() relative files
 '''
-import boto3
+
 import time
 import socket
-import sys
 from datetime import datetime as dtdt
 from datetime import date as dtd
 from dateutil.relativedelta import relativedelta
 from elasticsearch import Elasticsearch
 import subprocess
-import os
 
 
 class Tools:
     def __init__(self, s3=None):
         if s3:
-            self.bucketname = os.environ['S3_BUCKET_NAME']
-            self.path_name_s3_billing = [i for i in os.environ['S3_REPORT_PATH'].split('/') if i]
-            self.s3_report_name = os.environ['S3_REPORT_NAME']
+            self.bucketname = os.environ.get('S3_BUCKET_NAME', '')
+            self.path_name_s3_billing = os.environ.get('S3_REPORT_PATH', '')
+            if(self.path_name_s3_billing == '/'):
+                self.path_name_s3_billing = ''
+            self.s3_report_name = os.environ.get('S3_REPORT_NAME', '')
             self.s3 = s3
         else:
             pass
@@ -93,14 +93,10 @@ class Tools:
             print('Template already exists')
 
     def get_s3_bucket_dir_to_index(self):
-        if not self.path_name_s3_billing == '/':
-            self.path = '/' + '/'.join(self.path_name_s3_billing) + '/'
-        else:
-            self.path = self.path_name_s3_billing
         key_names = self.s3.list_objects(
             Bucket=self.bucketname,
             Delimiter='/',  # If this is not sent we don't get CommonPrefixes in the response
-            Prefix=self.path)
+            Prefix=self.path_name_s3_billing)
         s3_dir_names = []
         if 'CommonPrefixes' not in key_names:
             return 1
@@ -139,8 +135,7 @@ class Tools:
     def get_latest_zip_filename(self, monthly_dir_name):
         # monthly_dir_name for aws s3 directory format for getting the correct json file
         # json file name
-        latest_json_file_name = '/' + '/'.join(
-            self.path_name_s3_billing + [monthly_dir_name, self.s3_report_name + '-Manifest.json'])
+        latest_json_file_name = '/'.join([self.path_name_s3_billing, monthly_dir_name, '']) +  self.s3_report_name + '-Manifest.json'
 
         # download the jsonfile as getfile_$time.json from s3
         print('Downloading {}...'.format(latest_json_file_name))
