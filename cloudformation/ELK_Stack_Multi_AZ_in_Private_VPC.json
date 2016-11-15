@@ -507,26 +507,10 @@
               "update-ca-certificates -f",
               "pip3 install --upgrade pip3",
               "pip3 install boto3 elasticsearch nose",
-              {"Fn::If": ["HasBillingBucket", {
-                "Fn::Join": ["\n", [
-                  "# Install Golang for parsing AWS Bills in S3",
-                  "cat > /etc/environment << EOF",
-                  {"Fn::Join": ["=", ["ENVIRONMENT", {"Ref": "Environment"}]]},
-                  {"Fn::Join": ["=", ["S3_BUCKET_NAME", {"Ref": "BillingBucketName"}]]},
-                  {"Fn::Join": ["=", ["S3_REPORT_PATH", {"Ref": "BillingBucketPath"}]]},
-                  {"Fn::Join": ["=", ["S3_REPORT_NAME", {"Ref": "BillingReportName"}]]},
-                  "GOPATH=/go",
-                  "PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games",
-                  "EOF",
-                  "source /etc/environment",
-                  "export GOLANG_URL=\"https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz\"",
-                  "export GOLANG_SHA256=\"508028aac0654e993564b6e2014bf2d4a9751e3b286661b0b0040046cf18028e\"",
-                  "curl -fsSL $GOLANG_URL -o golang.tar.gz && echo $GOLANG_SHA256 golang.tar.gz | sha256sum -c - && tar -C /usr/local -xzf golang.tar.gz && rm golang.tar.gz",
-                  "mkdir -p  $GOPATH/src $GOPATH/bin && chmod -R 777 $GOPATH",
-                  "curl -O /go/src/app/go-wrapper https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/go-wrapper"
-                ]]},
-                {"Ref": "AWS::NoValue"}
-              ]},
+              "cat > /etc/environment << EOF",
+              {"Fn::Join": ["=", ["ENVIRONMENT", {"Ref": "Environment"}]]},
+              "EOF",
+
               "# Install Logstash & Elasticsearch",
 
               "/usr/share/elasticsearch/bin/plugin install cloud-aws -b",
@@ -661,14 +645,29 @@
                 ]]
               },
 
-              {"Fn::If": ["HasBillingBucket", {"Fn::Join": ["\n", [
-                "# Setup Kibana Dashboard for billing",
-                "mkdir /usr/local/bin/tools",
-                "wget -O /usr/local/bin/tools/__init__.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/tools/__init__.py",
-                "wget -O /usr/local/bin/tools/tools.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/tools/tools.py",
-                "wget -O /usr/local/bin/orchestrate.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/orchestrate.py",
-                "python3 -u /usr/local/bin/orchestrate.py"
-              ]]},""
+              {"Fn::If": ["HasBillingBucket", {
+                "Fn::Join": ["\n", [
+                  "cat > /etc/profile.d/kibana-billing.sh << EOF",
+                  {"Fn::Join": ["=", ["export S3_BUCKET_NAME", {"Ref": "BillingBucketName"}]]},
+                  {"Fn::Join": ["=", ["export S3_REPORT_PATH", {"Ref": "BillingBucketPath"}]]},
+                  {"Fn::Join": ["=", ["export S3_REPORT_NAME", {"Ref": "BillingReportName"}]]},
+                  "export GOPATH=/go",
+                  "export PATH=/go/bin:/usr/local/go/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games",
+                  "export GOLANG_URL=\"https://storage.googleapis.com/golang/go1.7.3.linux-amd64.tar.gz\"",
+                  "export GOLANG_SHA256=\"508028aac0654e993564b6e2014bf2d4a9751e3b286661b0b0040046cf18028e\"",
+                  "EOF",
+                  "source /etc/profile.d/kibana-billing.sh",
+                  "curl -fsSL $GOLANG_URL -o golang.tar.gz && echo $GOLANG_SHA256 golang.tar.gz | sha256sum -c - && tar -C /usr/local -xzf golang.tar.gz && rm golang.tar.gz",
+                  "mkdir -p  $GOPATH/src $GOPATH/bin && chmod -R 777 $GOPATH",
+                  "curl -O /go/src/app/go-wrapper https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/go-wrapper",
+                  "# Setup Kibana Dashboard for billing",
+                  "mkdir /usr/local/bin/tools",
+                  "wget -O /usr/local/bin/tools/__init__.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/tools/__init__.py",
+                  "wget -O /usr/local/bin/tools/tools.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/tools/tools.py",
+                  "wget -O /usr/local/bin/orchestrate.py https://raw.githubusercontent.com/toadkicker/elk-stack/master/extra/billing/orchestrate.py",
+                  "python3 -u /usr/local/bin/orchestrate.py"
+                ]]},
+                {"Ref": "AWS::NoValue"}
               ]}
             ]]
           }
