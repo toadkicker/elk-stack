@@ -55,3 +55,8 @@ exports.setup = function (express, app, config) {
         res.end('<html><body>Unauthorized</body></html>');
     })
 };
+
+
+function nonAuthenticated(config, url) {
+    return url.indexOf('/auth/auth0') === 0 || config.oauth_unauthenticated.indexOf(url) > -1
+}
