@@ -668,10 +668,7 @@
                   "python3 -u /usr/local/bin/orchestrate.py"
                 ]]},
                 {"Ref": "AWS::NoValue"}
-              ]},
-              "# Init complete, rebooting....",
-              "# Init complete, rebooting....",
-              "reboot"
+              ]}
             ]]
           }
         }
