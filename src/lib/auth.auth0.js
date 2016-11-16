@@ -1,14 +1,15 @@
 /**
  * Created by toadkicker on 11/10/16.
  */
-var config = require('../config.js'),
-    Auth0Strategy = require('passport-auth0'),
+var Auth0Strategy = require('passport-auth0'),
     passport = require('passport');
 
 exports.setup = function (express, app, config) {
     console.log('Auth0 OAuth2 authentication used');
 
-    var callbackUrl = config.host + '/auth/auth0/callback';
+    var callbackUrl = config.host + '/authorize';
+    var loginUrl = '/login/auth0';
+    var loginFailUrl = '/login/fail';
 
     var strategy = new Auth0Strategy({
             domain: config.allowed_domain,
@@ -23,40 +24,33 @@ exports.setup = function (express, app, config) {
             return done(null, profile);
         }
     );
-
     passport.use(strategy);
 
-    app.use(function (req, res, next) {
-        var verifyApiKey = require('./auth.apikey').verifyApiKey;
-        if (req.session.authenticated || nonAuthenticated(config, req.url) || verifyApiKey(config, req)) {
-            return next()
-        }
-        req.session.beforeLoginURL = req.url;
-        res.redirect('/auth/auth0');
-    });
-
     app.get(callbackUrl,
-        passport.authenticate('auth0', {failureRedirect: '/login'}),
+        passport.authenticate('auth0', {failureRedirect: loginUrl}),
         function (req, res) {
             if (!req.user) {
+                res.redirect(loginFailUrl);
                 throw new Error('user null');
             }
-            res.redirect("/");
+            res.redirect("/app/kibana");
         }
     );
 
-    app.get('/auth/auth0',
+    app.get(loginUrl,
         passport.authenticate('auth0', {}), function (req, res) {
             res.redirect("/");
         });
 
-    app.get('/auth/auth0/fail', function (req, res) {
+    app.get(loginFailUrl, function (req, res) {
         res.statusCode = 403;
         res.end('<html><body>Unauthorized</body></html>');
-    })
+    });
+
+    function nonAuthenticated(config, url) {
+        console.log("nonauth /login/auth0", url.indexOf('/login/auth0') === 0)
+        console.log("nonauth " + url, config.oauth_unauthenticated.indexOf(url) > -1)
+        return url.indexOf('/login/auth0') === 0 || config.oauth_unauthenticated.indexOf(url) > -1
+    }
+
 };
-
-
-function nonAuthenticated(config, url) {
-    return url.indexOf('/auth/auth0') === 0 || config.oauth_unauthenticated.indexOf(url) > -1
-}
