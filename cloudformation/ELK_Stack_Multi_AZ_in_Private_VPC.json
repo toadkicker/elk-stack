@@ -74,7 +74,7 @@
       "NoEcho": true
     },
     "AllowedDomain": {
-      "Description": "Domain associated with you OAuth provider, used for Oauth callbacks. e.g. mycompany.com",
+      "Description": "Domain associated with you OAuth provider, used for Oauth callbacks. e.g. mycompany.com. For Auth0, this would be myapp.auth0.com.",
       "Type": "String"
     },
     "VpcId": {
@@ -506,7 +506,7 @@
               "apt-get -y install ruby ruby-dev logstash openjdk-8-jre-headless openjdk-8-jdk elasticsearch nodejs build-essential ntp python3-pip",
               "update-ca-certificates -f",
               "pip3 install --upgrade pip3",
-              "pip3 install boto3 elasticsearch nose",
+              "pip3 install boto3 nose",
               "cat > /etc/environment << EOF",
               {"Fn::Join": ["=", ["ENVIRONMENT", {"Ref": "Environment"}]]},
               "EOF",
@@ -668,7 +668,10 @@
                   "python3 -u /usr/local/bin/orchestrate.py"
                 ]]},
                 {"Ref": "AWS::NoValue"}
-              ]}
+              ]},
+              "# Init complete, rebooting....",
+              "# Init complete, rebooting....",
+              "reboot"
             ]]
           }
         }
