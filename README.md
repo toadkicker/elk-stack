@@ -76,6 +76,27 @@ The easiest way to ensure you have the required VPC setup would be to delete you
 Installation
 ------------
 
+A. Test with `aws cloudformation validate-template  --template-body file:///$PATH/$TO/elk-stack/cloudformation/ELK_Stack_Multi_AZ_in_Private_VPC.json'
+B. Kick off Cloudformation
+    1. Upload the Cloudformation template via the console.
+    2. Or CLI with `aws cloudformation create-stack --template-body file:///$PATH/$TO/elk-stack/cloudformation/ELK_Stack_Multi_AZ_in_Private_VPC.json`
+
+You can choose to use Google OAuth or Auth0 to configure authentication. Additionally the public load balancer is firewalled to the `AllowedHttpCidr` param in the CloudFormation template.
+
+## Configure Auth0
+
+In Auth0 I recommend creating a new `Client` for testing this. In our environment we created a client specifically for administrative, testing, etc. functions. 
+
+In the `Client -> Settings` page add the `public URL + '/authorize'` for ELK (found in the Outputs tab in Cloudformation).
+
+1. For the `AllowedDomain` choose myclientname.auth0.com.
+
+2. Add your OAuthClientId and OAuthClient secret.
+ 
+3. Try to log in! 
+
+## Configure Google OAuth
+
 1. Go to [Google Developer Console][5] and create a new client ID for a web application
 
    You can leave the URLs as they are and update them once the ELK stack has been created. Take note of the Client ID and Client Secret as you will need them in the next step.
@@ -85,6 +106,12 @@ Installation
 3. Launch the ELK stack using the AWS console or `aws` command-line tool and enter the required parameters. Note that some parameters, like providing a Route53 Hosted Zone Name to create a DNS alias for the public ELB, are optional.
 
 4. Once the ELK stack has launched revisit the Google developer console and update the URLs copying the output for `GoogleOAuthRedirectURL` to `AUTHORIZED REDIRECT URI` and the same URL but without to path to `AUTHORISED JAVASCRIPT ORIGINS`.
+
+Once the instance is available you should see Kibana configured for Logstash.
+
+To configure logstash clients for your minons take a look in `scripts/`.
+
+* Please note that billing features could take up to 5 minutes or more on an m1.large before appearing. You can however view if it is working using the ES head plugin as new entries are indexed.
 
 Plugins
 -------
@@ -97,11 +124,13 @@ The following elasticsearch plugins are installed:
 The "head" plugin web page is available at proxied (ie. authenticated) endpoints based on how the ELK stack is deployed:
 
   * Head      -> `http://<ELB>/__es/_plugin/head/`
+  
+Also Sense is installed if you prefer a more DSL/RESTful approach.
 
 Configuration
 -------------
 
-This ELK stack cloudformation template takes many parameters, explanations for each are shown when launching the stack. Note that Route 53 DNS, EBS volumes and S3 snapshots are optional.
+This ELK stack cloudformation template takes many parameters, explanations for each are shown when launching the stack. Note that Billing Dashboards, Route 53 DNS, EBS volumes and S3 snapshots are optional.
 
 Logstash grok patterns can be tested online at https://grokdebug.herokuapp.com/
 
