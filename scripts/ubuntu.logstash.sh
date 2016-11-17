@@ -25,16 +25,12 @@
 #     "Resource": "arn:aws:kinesis:region:accountid:stream/streamname*",
 #     "Effect": "Allow"
 # }
-rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch;
-cat > /etc/yum.repos.d/logstash.repo << EOF
-[logstash-2.2]
-name=Logstash repository for 2.2.x packages
-baseurl=http://packages.elastic.co/logstash/2.2/centos
-gpgcheck=1
-gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
-enabled=1
-EOF
-yum -y install logstash;
+add-apt-repository -y ppa:webupd8team/java
+echo "deb http://packages.elastic.co/logstash/2.3/debian stable main" | sudo tee -a /etc/apt/sources.list
+apt-get update
+apt-get -y install oracle-java8-installer logstash
+
+# Configure logstash
 cat > /etc/logstash/conf.d/logstash-kinesis.conf << EOF
 input {
     stdin { }
@@ -69,6 +65,7 @@ output {
     }
 }
 EOF
+
 /opt/logstash/bin/plugin install logstash-output-kinesis
 if $(service logstash configtest)
 then service logstash start
