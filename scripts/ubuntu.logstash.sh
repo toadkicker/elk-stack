@@ -29,11 +29,18 @@ add-apt-repository -y ppa:webupd8team/java
 echo "deb http://packages.elastic.co/logstash/2.3/debian stable main" | sudo tee -a /etc/apt/sources.list
 apt-get update
 apt-get -y install oracle-java8-installer logstash
+/opt/logstash/bin/logstash-plugin install logstash-input-cloudwatch logstash-output-kinesis
 
 # Configure logstash
 cat > /etc/logstash/conf.d/logstash-kinesis.conf << EOF
 input {
     stdin { }
+    cloudwatch {
+        namespace => "AWS/EC2"
+        metrics => [ "CPUUtilization" ]
+        filters => { "tag:Environment" => "${ENVIRONMENT}" }
+        region => "us-east-1"
+    }
     tcp {
         port => 5000
         type => syslog

@@ -35,9 +35,16 @@ gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
 enabled=1
 EOF
 yum -y install logstash;
+/opt/logstash/bin/logstash-plugin install logstash-input-cloudwatch logstash-output-kinesis;
 cat > /etc/logstash/conf.d/logstash-kinesis.conf << EOF
 input {
     stdin { }
+    cloudwatch {
+        namespace => "AWS/EC2"
+        metrics => [ "CPUUtilization" ]
+        filters => { "tag:Environment" => "${ENVIRONMENT}" }
+        region => "us-east-1"
+    }
     tcp {
         port => 5000
         type => syslog
