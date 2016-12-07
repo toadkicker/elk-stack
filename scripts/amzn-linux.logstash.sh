@@ -25,36 +25,27 @@
 #     "Resource": "arn:aws:kinesis:region:accountid:stream/streamname*",
 #     "Effect": "Allow"
 # }
+
+# Set up logstash repo
 rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch;
+
+# Add configuration files
+cat > /etc/profile.d/environment.sh << EOF
+export ENVIRONMENT=development
+EOF
+
+
 cat > /etc/yum.repos.d/logstash.repo << EOF
-[logstash-2.2]
-name=Logstash repository for 2.2.x packages
-baseurl=http://packages.elastic.co/logstash/2.2/centos
+[logstash-2.4]
+name=Logstash repository for 2.4.x packages
+baseurl=https://packages.elastic.co/logstash/2.4/centos
 gpgcheck=1
-gpgkey=http://packages.elastic.co/GPG-KEY-elasticsearch
+gpgkey=https://packages.elastic.co/GPG-KEY-elasticsearch
 enabled=1
 EOF
 yum -y install logstash;
-/opt/logstash/bin/logstash-plugin install logstash-input-cloudwatch logstash-output-kinesis;
-cat > /etc/logstash/conf.d/logstash-kinesis.conf << EOF
-input {
-    stdin { }
-    cloudwatch {
-        namespace => "AWS/EC2"
-        metrics => [ "CPUUtilization" ]
-        filters => { "tag:Environment" => "${ENVIRONMENT}" }
-        region => "us-east-1"
-    }
-    tcp {
-        port => 5000
-        type => syslog
-    }
-    udp {
-        port => 5000
-        type => syslog
-    }
-}
-
+/opt/logstash/bin/plugin install logstash-input-cloudwatch logstash-output-kinesis;
+cat > /etc/logstash/conf.d/logstash-syslog-filter.conf << EOF
 filter {
   if [type] == "syslog" {
     grok {
@@ -67,16 +58,41 @@ filter {
     }
   }
 }
+EOF
+cat > /etc/logstash/conf.d/logstash-input.conf << EOF
+input {
+    stdin { }
+    cloudwatch {
+        namespace => "AWS/EC2"
+        metrics => [ "CPUUtilization" ]
+        filters => { "tag:Environment" => "${ENVIRONMENT}" }
+        region => "us-east-1"
+    }
+    file {
+        path => ["/var/log/**/*.log", "/var/log/messages"]
+    }
+}
+EOF
 
+cat > /etc/logstash/conf.d/logstash-kinesis.conf << EOF
 output {
     kinesis {
         codec => json { }
-        stream_name => "@@STREAM_NAME"
+        stream_name => "ELK-Development-ElkKinesisStream-107R4L566PVEA"
         region => "us-east-1"
     }
 }
 EOF
-/opt/logstash/bin/plugin install logstash-output-kinesis
-if $(service logstash configtest)
-then service logstash start
-fi
+
+cat > /etc/logstash/conf.d/logstash-tcp.conf << EOF
+output {
+    tcp {
+        host => "logstash-${ENVIRONMENT}.intensity.internal"
+        port => 6379
+        codec => json_lines
+    }
+}
+EOF
+
+
+/etc/init.d/logstash start
