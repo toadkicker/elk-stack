@@ -143,6 +143,10 @@
     "BillingReportName": {
       "Description": "The name of the billing report given in the Bill and Cost Management section of AWS.",
       "Type": "String"
+    },
+    "CloudwatchLoggingGroupName": {
+      "Description": "If you want to use a cloudwatch logging group, we can configure it to stream data to Kinesis.",
+      "Type": "String"
     }
   },
   "Conditions": {
@@ -184,6 +188,59 @@
       }
     },
 
+    "CWLtoKinesisRole": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": {"Fn::Join": ["-", ["CWLtoKinesisRole", {"Ref": "Environment"}]]},
+        "PolicyDocument": {
+          "Statement": {
+            "Effect": "Allow",
+            "Principal": { "Service": "logs.us-east-1.amazonaws.com" },
+            "Action": "sts:AssumeRole"
+          }
+        }
+      }
+    },
+    "CWLtoKinesisPublishRole": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": {
+          "Fn::Join": [
+            "-",
+            [
+              "CWLtoKinesisRole",
+              {
+                "Ref": "Environment"
+              }
+            ]
+          ]
+        },
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Action": "kinesis:PutRecord",
+              "Resource": { "Ref": "ElkKinesisStream" }
+            },
+            {
+              "Effect": "Allow",
+              "Action": "iam:PassRole",
+              "Resource": { "Ref": "CWLtoKinesisRole" }
+            }
+          ]
+        }
+      }
+    },
+    "CWLSubscriptionFilter": {
+      "Type": "AWS::Logs::SubscriptionFilter",
+      "Properties": {
+        "LogGroupName": {"Ref": "CloudwatchLoggingGroupName"},
+        "FilterPattern": "*",
+        "FilterName": {"Fn::Join": ["-", ["CWL","Kinesis","Filter",{"Ref":"Environment"}]]},
+        "DestinationArn": {"Ref": "ElkKinesisStream"},
+        "RoleArn": {"Ref": "CWLtoKinesisRole"}
+      }
+    },
     "ElkS3Policy": {
       "Type": "AWS::IAM::Policy",
       "Condition": "HasS3",
@@ -509,6 +566,7 @@
               "pip3 install boto3 nose",
               "cat > /etc/environment << EOF",
               {"Fn::Join": ["=", ["ENVIRONMENT", {"Ref": "Environment"}]]},
+              {"Fn::Join": ["=", ["INTERNAL_DNS", {"Ref": "ElkInternalLoadBalancer"}]]},
               "EOF",
 
               "# Install Logstash & Elasticsearch",
